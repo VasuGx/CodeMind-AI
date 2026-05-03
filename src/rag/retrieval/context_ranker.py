@@ -1,3 +1,4 @@
+import re
 from typing import List, Dict, Any
 from src.schemas.rag_schemas import QueryAnalysis
 
@@ -17,19 +18,32 @@ class ContextRanker:
         for chunk in chunks:
             score = 0
             metadata = chunk["metadata"]
+            content = chunk["content"].lower()
             
-            # Boost for function/name match (Highest Priority)
+            # A. Boost for function/name match (Highest Priority)
             if analysis.function_hint and metadata.get("name") == analysis.function_hint:
-                score += 50
+                score += 100
             
-            # Boost for file match
+            # B. Boost for file match
             if analysis.file_hint and analysis.file_hint in metadata.get("file_path", ""):
-                score += 30
+                score += 60
                 
-            # Boost for keyword overlap
+            # C. Boost for keyword overlap in metadata
             chunk_keywords = set(metadata.get("keywords", []))
             overlap = set(analysis.keywords).intersection(chunk_keywords)
-            score += len(overlap) * 5
+            score += len(overlap) * 10
+            
+            # D. Proximity Scoring (Exact error phrases in content)
+            # If the raw query (e.g. "NoneType has no attribute resources") is in content
+            if analysis.error_type and analysis.error_type.lower() in content:
+                score += 40
+                
+            # E. Line Number Match (If the query contains "line 42")
+            line_match = re.search(r"line (\d+)", analysis.raw_query.lower())
+            if line_match:
+                line_num = int(line_match.group(1))
+                if metadata.get("line_start", 0) <= line_num <= metadata.get("line_end", 0):
+                    score += 80
             
             scored_chunks.append((score, chunk))
 
@@ -37,7 +51,6 @@ class ContextRanker:
         scored_chunks.sort(key=lambda x: x[0], reverse=True)
         
         # 3. Pruning / Token Filtering
-        # Approximation: 1 token ~= 4 characters
         total_chars = 0
         max_chars = max_tokens * 4
         
@@ -48,8 +61,6 @@ class ContextRanker:
                 filtered.append(chunk)
                 total_chars += chunk_len
             else:
-                # If a chunk is too big, we just skip it and keep looking for smaller ones 
-                # (or we could stop here, but skipping allows better density)
                 continue
                 
         return filtered

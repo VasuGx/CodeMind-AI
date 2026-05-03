@@ -10,10 +10,7 @@ venv/
 
 # Project specific
 faiss_index/
-check_embeddings.py
-fix_imports.py
-migrate.py
-build_tests.py
-core/
+indexed_repos/
+*.json
 temp_*/
 *.tmp

@@ -10,3 +10,10 @@ python-dotenv
 pytest
 flake8
 sentence-transformers
+rank_bm25
+numpy
+scikit-learn
+GitPython
+python-multipart
+streamlit
+requests
