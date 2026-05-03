@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.pytest_cache/
+*.log
+
+# Project specific
+faiss_index/
+check_embeddings.py
+fix_imports.py
+migrate.py
+build_tests.py
+core/
+temp_*/
+*.tmp
