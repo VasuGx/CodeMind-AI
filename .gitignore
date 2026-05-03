@@ -6,6 +6,7 @@ venv/
 .env
 .pytest_cache/
 *.log
+.idea/
 
 # Project specific
 faiss_index/
